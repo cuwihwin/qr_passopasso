@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR passo passo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday: un quaderno di laboratorio, preciso e paziente
+   IDEA la scheda tecnica di un QR stampata su carta millimetrata: moduli neri, bit colorati per tipo
+   PICTURE la griglia del QR, grande, che si riempie passo dopo passo
+   COLOUR bianco, nero, blu cobalto per i dati, arancio per la correzione, viola per il formato
+   TYPE IBM Plex Sans per il testo, IBM Plex Mono per i bit
+   LAYOUT laptop: barra dei passi fissa, testo del passo a sinistra, griglia fissa a destra; telefono: barra, griglia, testo */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121316);--ink:light-dark(#121316,#eceef2);--soft:light-dark(#5e6470,#a3a9b5);--line:light-dark(#d9dce2,#30343c);--panel:light-dark(#f4f5f7,#1b1d22);--data:light-dark(#1f4fd1,#5b86ff);--datal:light-dark(#d9e3ff,#1d2a52);--ec:light-dark(#e8590c,#ff8a47);--ecl:light-dark(#ffe1cf,#4a2412);--fmt:light-dark(#7b3fe4,#a983ff);--fmtl:light-dark(#e9defc,#2d2148);--ok:light-dark(#0b7a3b,#4fd28a);--bad:light-dark(#d62828,#ff6b6b);--hi:#ffd21f;--cell0:#ffffff;--cell1:#111111}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(18px,3vw,36px) max(4vw,16px)}
+h1{font-weight:700;font-size:clamp(32px,5vw,46px);line-height:1.05;letter-spacing:-.02em;margin:0 0 6px}
+h2{font-size:24px;line-height:1.2;margin:0 0 8px;letter-spacing:-.01em}
+h3{font-size:17px;margin:18px 0 6px}
+p{margin:0 0 10px}
+.lead{color:var(--soft);max-width:64ch;margin-bottom:14px}
+.inrow{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.inrow label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+input[type=text],textarea{font:inherit;font-size:16px;min-height:44px;padding:8px 12px;border:2px solid var(--ink);border-radius:6px;background:var(--bg);color:var(--ink)}
+#txt{width:min(420px,100%)}
+textarea{width:100%;min-height:70px;font-family:"IBM Plex Mono",monospace;font-size:15px}
+button{font:inherit;font-size:16px;min-height:44px;padding:0 14px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;font-weight:600}
+button:hover{background:var(--panel)}
+button.on{background:var(--ink);color:var(--bg)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible,input[type=range]:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.seg{display:flex;gap:0}.seg button{border-radius:0;min-width:44px;margin-left:-2px}.seg button:first-child{border-radius:6px 0 0 6px;margin-left:0}.seg button:last-child{border-radius:0 6px 6px 0}
+.err{color:var(--bad);font-weight:600}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-top:4px solid var(--ink);border-bottom:1px solid var(--line);padding:10px max(4vw,16px)}
+.pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.pill{flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;background:var(--bg)}
+.pill .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--panel);font-size:12px}
+.pill.cur{border-color:var(--ink);background:var(--ink);color:var(--bg)}.pill.cur .num{background:var(--bg);color:var(--ink)}
+.pill.ver .num{background:var(--ok);color:#fff}
+.pill.lab{border-style:dashed}
+.sum{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--soft);margin-top:4px}
+.sum b{color:var(--ink)}
+.track{height:6px;background:var(--panel);border-radius:3px;margin-top:6px;overflow:hidden}.track i{display:block;height:100%;background:var(--ink);transition:width .3s}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(46vw,520px));gap:clamp(20px,3vw,44px);align-items:start}
+.gridbox{position:sticky;top:120px}
+.gridbox svg{width:100%;height:auto;display:block;border:1px solid var(--line);background:#fff;touch-action:manipulation}
+.gridbox svg.draw{touch-action:none;cursor:crosshair}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--soft);margin-top:8px}
+.legend i{display:inline-block;width:13px;height:13px;vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}
+.gcap{font-size:14px;color:var(--soft);margin-top:6px;min-height:1.5em}
+.bits{font-family:"IBM Plex Mono",monospace;font-size:15px;overflow-wrap:anywhere;line-height:1.7;background:var(--panel);padding:10px 12px;border-radius:6px}
+.bits .a{color:var(--fmt);font-weight:600}.bits .b{color:var(--ec);font-weight:600}.bits .c{color:var(--data);font-weight:600}.bits .d{color:var(--soft)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;font-size:15px}
+th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;font-size:13px;color:var(--soft)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.m,.m{font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.check{border-left:5px solid var(--ink);background:var(--panel);padding:12px 14px;margin-top:18px;border-radius:0 6px 6px 0}
+.check h3{margin-top:0}
+.check .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.check.good{border-color:var(--ok)}.check.bad{border-color:var(--bad)}
+.res{font-weight:600;margin:8px 0 0}.res.good{color:var(--ok)}.res.bad{color:var(--bad)}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.masks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.mk{display:flex;flex-direction:column;align-items:stretch;padding:6px;height:auto;min-height:0;border-width:1.5px;border-color:var(--line);font-size:13px;font-weight:400;text-align:left}
+.mk svg{width:100%;height:auto;display:block;background:#fff;margin-bottom:4px}
+.mk.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.mk .t{font-weight:700;font-size:15px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--ok);color:#fff;margin-left:4px}
+.tag.book{background:var(--fmt)}
+.strip{display:flex;flex-wrap:wrap;gap:3px;margin:8px 0}
+.strip span{width:18px;height:18px;border-radius:3px;background:var(--datal);font-size:10px;display:grid;place-items:center}
+.strip span.e{background:var(--ecl)}
+.strip span.x{background:var(--bad);color:#fff}
+.big{font-size:22px;font-weight:700}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+input[type=range]{width:min(320px,100%);accent-color:var(--ink);min-height:44px}
+.layers{list-style:none;padding:0;margin:10px 0}
+.layers li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline}
+.layers li.off{color:var(--soft)}
+.layers b{font-variant-numeric:tabular-nums}
+.mini{min-height:32px;padding:0 10px;font-size:13px;font-weight:400;border-width:1px;border-color:var(--line);color:var(--soft)}
+details.calc{margin:14px 0;border:1px solid var(--line);border-radius:6px;padding:0 12px}
+details.calc[open]{padding-bottom:12px}
+details.calc>summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}
+details.calc>summary::-webkit-details-marker{display:none}
+details.calc>summary::before{content:'▸'}details.calc[open]>summary::before{content:'▾'}
+details.calc>summary:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+details.calc .o2{display:none}details.calc[open] .o1{display:none}details.calc[open] .o2{display:inline}
+@media(max-width:860px){.main{grid-template-columns:minmax(0,1fr)}.gridbox{position:static;order:-1;max-width:460px}.masks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.sum span:not(:last-child){display:none}.gridbox{max-width:340px;margin:auto}.bar{padding-top:6px;padding-bottom:6px}}
+@media(prefers-reduced-motion:reduce){.track i{transition:none}}
+</style>
+</head>
+<body>
+<header class="band" style="padding-bottom:14px">
+<h1>QR passo passo</h1>
+<p class="lead">Dal testo al codice da inquadrare, passo dopo passo: versioni 1 e 2, un solo blocco di correzione, Reed-Solomon su GF(256).</p>
+<div class="inrow">
+<label for="txt">Messaggio<input type="text" id="txt" value="HELLO WORLD" autocomplete="off" spellcheck="false"></label>
+<div><div style="font-weight:600;font-size:14px;margin-bottom:4px">Livello di correzione</div><div class="seg" id="lev"></div></div>
+<button id="book" class="mini">Ripristina esempio iniziale</button>
+</div>
+<p class="err" id="encerr" hidden></p>
+</header>
+<nav class="bar" aria-label="Passi"><div class="pills" id="pills"></div><div class="sum" id="sum"></div><div class="track"><i id="prog"></i></div></nav>
+<main class="band main">
+<section id="step" aria-live="polite"></section>
+<aside class="gridbox"><div id="grid"></div><div class="gcap" id="gcap"></div><div class="legend" id="legend"></div></aside>
+</main>
+<script>
+{
+// ===== Motore QR (versioni 1-2, un blocco) =====
+const EXP=new Array(512),LOG=new Array(256);
+{let x=1;for(let i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=285;}for(let i=255;i<512;i++)EXP[i]=EXP[i-255];}
+const gmul=(a,b)=>a&&b?EXP[LOG[a]+LOG[b]]:0;
+const gdiv=(a,b)=>a?EXP[(LOG[a]-LOG[b]+255)%255]:0;
+const gpow=(x,p)=>EXP[((LOG[x]*p)%255+255)%255];
+const ginv=x=>EXP[255-LOG[x]];
+const ALNUM='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+const CAP={1:{L:[19,7],M:[16,10],Q:[13,13],H:[9,17]},2:{L:[34,10],M:[28,16],Q:[22,22],H:[16,28]}};
+const MODES={num:{name:'numerica',ind:'0001',cc:10},alnum:{name:'alfanumerica',ind:'0010',cc:9},byte:{name:'byte',ind:'0100',cc:8}};
+const LEVBITS={L:'01',M:'00',Q:'11',H:'10'};
+const bin=(v,n)=>v.toString(2).padStart(n,'0');
+
+function pickMode(t){
+  if(/^[0-9]+$/.test(t))return 'num';
+  if([...t].every(c=>ALNUM.includes(c)))return 'alnum';
+  if([...t].every(c=>c.charCodeAt(0)<256))return 'byte';
+  return null;
+}
+function dataBits(t,mode){ // [{chunk,bits,note}]
+  const out=[];
+  if(mode==='num'){for(let i=0;i<t.length;i+=3){const g=t.slice(i,i+3),n=g.length===3?10:g.length===2?7:4;out.push({chunk:g,bits:bin(parseInt(g,10),n),note:`${g} → ${parseInt(g,10)} su ${n} bit`});}}
+  else if(mode==='alnum'){for(let i=0;i<t.length;i+=2){const a=ALNUM.indexOf(t[i]);if(i+1<t.length){const b=ALNUM.indexOf(t[i+1]),v=a*45+b;out.push({chunk:t.slice(i,i+2),bits:bin(v,11),note:`${a}·45 + ${b} = ${v}`});}else out.push({chunk:t[i],bits:bin(a,6),note:`${a} su 6 bit`});}}
+  else{for(const c of t){const v=c.charCodeAt(0);out.push({chunk:c,bits:bin(v,8),note:`${v}`});}}
+  return out;
+}
+function genPoly(n){let g=[1];for(let i=0;i<n;i++){const r=new Array(g.length+1).fill(0);for(let j=0;j<g.length;j++){r[j]^=g[j];r[j+1]^=gmul(g[j],EXP[i]);}g=r;}return g;}
+function rsDivide(data,n){ // ritorna resto e passi della divisione
+  const g=genPoly(n);let cur=data.concat(new Array(n).fill(0));const steps=[];
+  for(let i=0;i<data.length;i++){
+    const lead=cur[0];
+    if(lead===0){cur=cur.slice(1);steps.push({lead:0,exp:null,res:cur.slice()});continue;}
+    const e=LOG[lead],m=g.map(c=>gmul(c,lead));
+    const nx=cur.map((c,j)=>j<m.length?c^m[j]:c).slice(1);
+    steps.push({lead,exp:e,mult:m,res:nx.slice()});cur=nx;
+  }
+  return {rem:cur.slice(0,n),steps,g};
+}
+function encode(text,level,forceVer){
+  const mode=pickMode(text);if(!mode)return{err:'Il testo contiene caratteri che la modalità byte (ISO-8859-1) non può codificare.'};
+  if(!text.length)return{err:'Scrivi almeno un carattere.'};
+  const db=dataBits(text,mode),dlen=db.reduce((s,c)=>s+c.bits.length,0),head=4+MODES[mode].cc;
+  let ver=null;for(const v of [1,2]){if(forceVer&&v!==forceVer)continue;if(head+dlen<=CAP[v][level][0]*8){ver=v;break;}}
+  if(!ver)return{err:`Troppo lungo per le versioni 1 e 2 al livello ${level}: servono ${head+dlen} bit di dati, ne entrano al massimo ${CAP[2][level][0]*8}.`};
+  const [k,ec]=CAP[ver][level],cap=k*8;
+  const ind=MODES[mode].ind,cnt=bin(text.length,MODES[mode].cc);
+  let bits=ind+cnt+db.map(c=>c.bits).join('');
+  const term='0'.repeat(Math.min(4,cap-bits.length));bits+=term;
+  const zeros='0'.repeat((8-bits.length%8)%8);bits+=zeros;
+  const pads=[];while(bits.length<cap){const p=pads.length%2?'00010001':'11101100';pads.push(p);bits+=p;}
+  const bytes=[];for(let i=0;i<cap;i+=8)bytes.push(parseInt(bits.slice(i,i+8),2));
+  const rs=rsDivide(bytes,ec);
+  const code=bytes.concat(rs.rem);
+  const M=build(ver,code,level);
+  return{text,mode,ver,level,k,ec,ind,cnt,db,term,zeros,pads,bits,bytes,rs,code,...M};
+}
+// ===== matrice =====
+function emptyM(n,v){return Array.from({length:n},()=>new Array(n).fill(v));}
+function functionLayers(ver){ // livelli: finder, separatori, timing, allineamento, modulo scuro, aree formato
+  const n=17+4*ver,L=[];
+  const fin=[],sep=[];
+  for(const[r0,c0]of[[0,0],[0,n-7],[n-7,0]]){
+    for(let r=0;r<7;r++)for(let c=0;c<7;c++){const d=Math.max(Math.abs(r-3),Math.abs(c-3));fin.push([r0+r,c0+c,d!==2?1:0]);}
+    for(let i=-1;i<=7;i++)for(const[r,c]of[[r0-1,c0+i],[r0+7,c0+i],[r0+i,c0-1],[r0+i,c0+7]])if(r>=0&&c>=0&&r<n&&c<n)sep.push([r,c,0]);
+  }
+  L.push({id:'fin',name:'Pattern di ricerca',cells:fin},{id:'sep',name:'Separatori',cells:dedupe(sep)});
+  const tim=[];for(let i=8;i<n-8;i++){tim.push([6,i,i%2?0:1],[i,6,i%2?0:1]);}
+  L.push({id:'tim',name:'Timing pattern',cells:tim});
+  const al=[];if(ver>=2){const c=18;for(let r=-2;r<=2;r++)for(let q=-2;q<=2;q++){const d=Math.max(Math.abs(r),Math.abs(q));al.push([c+r,c+q,d!==1?1:0]);}}
+  L.push({id:'ali',name:'Pattern di allineamento',cells:al});
+  L.push({id:'dark',name:'Modulo scuro',cells:[[4*ver+9,8,1]]});
+  const fm=[];for(let i=0;i<9;i++){if(i!==6){fm.push([8,i,2],[i,8,2]);}}for(let i=0;i<8;i++){fm.push([8,n-1-i,2]);if(i<7)fm.push([n-1-i,8,2]);}
+  L.push({id:'fmt',name:'Aree riservate al formato',cells:dedupe(fm).filter(([r,c])=>!(r===4*ver+9&&c===8))});
+  return L;
+}
+function dedupe(a){const s=new Set();return a.filter(([r,c])=>{const k=r+','+c;if(s.has(k))return false;s.add(k);return true;});}
+function isFuncMap(ver){const n=17+4*ver,F=emptyM(n,false);functionLayers(ver).forEach(l=>l.cells.forEach(([r,c])=>F[r][c]=true));return F;}
+function zigzag(ver){const n=17+4*ver,F=isFuncMap(ver),order=[];
+  for(let right=n-1;right>=1;right-=2){if(right===6)right=5;
+    for(let v=0;v<n;v++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)===0,y=up?n-1-v:v;if(!F[y][x])order.push([y,x]);}}
+  return order;}
+const MASKF=[(r,c)=>(r+c)%2===0,(r,c)=>r%2===0,(r,c)=>c%3===0,(r,c)=>(r+c)%3===0,(r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,(r,c)=>(r*c)%2+(r*c)%3===0,(r,c)=>((r*c)%2+(r*c)%3)%2===0,(r,c)=>((r+c)%2+(r*c)%3)%2===0];
+const MASKTXT=['(riga + colonna) mod 2 = 0','riga mod 2 = 0','colonna mod 3 = 0','(riga + colonna) mod 3 = 0','(⌊riga/2⌋ + ⌊colonna/3⌋) mod 2 = 0','(riga·colonna) mod 2 + (riga·colonna) mod 3 = 0','((riga·colonna) mod 2 + (riga·colonna) mod 3) mod 2 = 0','((riga + colonna) mod 2 + (riga·colonna) mod 3) mod 2 = 0'];
+function formatBits(level,mask){const d=parseInt(LEVBITS[level]+bin(mask,3),2);let r=d<<10;const steps=[];
+  for(let i=14;i>=10;i--)if((r>>i)&1){const before=r;r^=0b10100110111<<(i-10);steps.push({before:bin(before,15),g:bin(0b10100110111<<(i-10),15),after:bin(r,15)});}
+  const full=(d<<10)|r;return{data:bin(d,5),rem:bin(r,10),full:bin(full,15),masked:bin(full^0b101010000010010,15),steps};}
+function placeFormat(M,ver,fstr){const n=17+4*ver,b=i=>+fstr[14-i];// b(i) = bit i dal meno significativo
+  const pos=formatPositions(ver);pos.forEach(([r,c,i])=>M[r][c]=b(i));}
+function formatPositions(ver){const n=17+4*ver,P=[];
+  for(let i=0;i<=5;i++)P.push([i,8,i]);P.push([7,8,6],[8,8,7],[8,7,8]);for(let i=9;i<15;i++)P.push([8,14-i,i]);
+  for(let i=0;i<8;i++)P.push([8,n-1-i,i]);for(let i=8;i<15;i++)P.push([n-15+i,8,i]);return P;}
+function penalty(M){const n=M.length;let p1=0,p2=0,p3=0,dark=0;
+  for(let k=0;k<2;k++)for(let i=0;i<n;i++){let run=1;for(let j=1;j<=n;j++){const a=k?M[j-1]?.[i]:M[i][j-1],b=j<n?(k?M[j][i]:M[i][j]):-1;if(b===a)run++;else{if(run>=5)p1+=3+run-5;run=1;}}}
+  for(let i=0;i<n-1;i++)for(let j=0;j<n-1;j++){const a=M[i][j];if(a===M[i+1][j]&&a===M[i][j+1]&&a===M[i+1][j+1])p2+=3;}
+  const pa='10111010000',pb='00001011101';
+  for(let i=0;i<n;i++){const row=M[i].join(''),col=M.map(r=>r[i]).join('');for(const s of[row,col])for(let j=0;j+11<=n;j++){const w=s.slice(j,j+11);if(w===pa||w===pb)p3+=40;}}
+  M.forEach(r=>r.forEach(v=>dark+=v));const pct=dark*100/(n*n),prev=Math.floor(pct/5)*5,p4=Math.min(Math.abs(prev-50),Math.abs(prev+5-50))/5*10;
+  return{p1,p2,p3,p4,tot:p1+p2+p3+p4,pct};}
+function build(ver,code,level){
+  const n=17+4*ver,base=emptyM(n,0);
+  functionLayers(ver).forEach(l=>l.cells.forEach(([r,c,v])=>base[r][c]=v===1?1:0));
+  const order=zigzag(ver),bits=code.map(b=>bin(b,8)).join('');
+  const raw=base.map(r=>r.slice());const kind=emptyM(n,null);
+  order.forEach(([r,c],i)=>{raw[r][c]=i<bits.length?+bits[i]:0;kind[r][c]=i<bits.length?Math.floor(i/8):-1;});
+  const F=isFuncMap(ver),masks=[];
+  for(let m=0;m<8;m++){const X=raw.map((row,r)=>row.map((v,c)=>!F[r][c]&&MASKF[m](r,c)?v^1:v));const f=formatBits(level,m);placeFormat(X,ver,f.masked);masks.push({M:X,pen:penalty(X),fmt:f});}
+  let best=0;masks.forEach((m,i)=>{if(m.pen.tot<masks[best].pen.tot)best=i;});
+  return{n,base,raw,order,kind,masks,best,final:masks[best].M,F};
+}
+// ===== decodifica (per "Danneggia") =====
+const FMTS=[];for(const l of 'LMQH')for(let m=0;m<8;m++)FMTS.push({l,m,s:formatBits(l,m).masked});
+function readFormat(M,ver){const pos=formatPositions(ver);const c1=new Array(15),c2=new Array(15);
+  pos.forEach(([r,c,i],k)=>{(k<15?c1:c2)[14-i]=M[r][c];});
+  let best=null;for(const f of FMTS)for(const cp of[c1,c2]){const d=[...f.s].reduce((s,b,i)=>s+(+b!==cp[i]),0);if(!best||d<best.d)best={...f,d};}
+  return best.d<=3?best:null;}
+function polyEval(p,x){let y=p[0];for(let i=1;i<p.length;i++)y=gmul(y,x)^p[i];return y;}
+function polyAdd(p,q){const n=Math.max(p.length,q.length),r=new Array(n).fill(0);p.forEach((v,i)=>r[i+n-p.length]=v);q.forEach((v,i)=>r[i+n-q.length]^=v);return r;}
+function polyMul(p,q){const r=new Array(p.length+q.length-1).fill(0);p.forEach((a,i)=>q.forEach((b,j)=>r[i+j]^=gmul(a,b)));return r;}
+const polyScale=(p,x)=>p.map(v=>gmul(v,x));
+function rsCorrect(msg,nsym){
+  const synd=[0];for(let i=0;i<nsym;i++)synd.push(polyEval(msg,EXP[i]));
+  if(synd.every(v=>v===0))return{ok:true,msg:msg.slice(),pos:[]};
+  let el=[1],ol=[1];const shift=synd.length-nsym;
+  for(let i=0;i<nsym;i++){const K=i+shift;let delta=synd[K];for(let j=1;j<el.length;j++)delta^=gmul(el[el.length-1-j],synd[K-j]);ol=ol.concat([0]);
+    if(delta){if(ol.length>el.length){const nl=polyScale(ol,delta);ol=polyScale(el,ginv(delta));el=nl;}el=polyAdd(el,polyScale(ol,delta));}}
+  while(el.length&&el[0]===0)el.shift();const errs=el.length-1;if(errs*2>nsym)return{ok:false};
+  const rev=el.slice().reverse(),pos=[];for(let i=0;i<msg.length;i++)if(polyEval(rev,gpow(2,i))===0)pos.push(msg.length-1-i);
+  if(pos.length!==errs)return{ok:false};
+  const coef=pos.map(p=>msg.length-1-p);let loc=[1];coef.forEach(c=>loc=polyMul(loc,polyAdd([1],[gpow(2,c),0])));
+  const sr=synd.slice().reverse();const prod=polyMul(sr,loc);const dv=[1].concat(new Array(loc.length).fill(0));
+  const out=prod.slice();for(let i=0;i<=prod.length-dv.length;i++){const cf=out[i];if(cf)for(let j=1;j<dv.length;j++)if(dv[j])out[i+j]^=gmul(dv[j],cf);}
+  const ev=out.slice(out.length-(dv.length-1)).reverse();
+  const X=coef.map(c=>gpow(2,c)),E=new Array(msg.length).fill(0);
+  X.forEach((Xi,i)=>{const xin=ginv(Xi);let lp=1;X.forEach((Xj,j)=>{if(j!==i)lp=gmul(lp,1^gmul(xin,Xj));});
+    const y=gmul(Xi,polyEval(ev.slice().reverse(),xin));E[pos[i]]=gdiv(y,lp);});
+  const fixed=polyAdd(msg,E);
+  for(let i=0;i<nsym;i++)if(polyEval(fixed,EXP[i]))return{ok:false};
+  return{ok:true,msg:fixed,pos};}
+function parseData(bytes,ver){const b=bytes.map(x=>bin(x,8)).join('');let i=0;const rd=n=>{const v=parseInt(b.slice(i,i+n),2);i+=n;return v;};
+  const ind=b.slice(0,4);i=4;const mode=Object.keys(MODES).find(m=>MODES[m].ind===ind);if(!mode)return null;const cnt=rd(MODES[mode].cc);let t='';
+  try{if(mode==='num'){let left=cnt;while(left>0){const g=Math.min(3,left),v=rd(g===3?10:g===2?7:4);t+=String(v).padStart(g,'0');left-=g;}}
+  else if(mode==='alnum'){let left=cnt;while(left>1){const v=rd(11);t+=ALNUM[Math.floor(v/45)]+ALNUM[v%45];left-=2;}if(left)t+=ALNUM[rd(6)];}
+  else for(let k=0;k<cnt;k++)t+=String.fromCharCode(rd(8));}catch(e){return null;}
+  return t.includes('undefined')?null:t;}
+function decode(M,ver){
+  const f=readFormat(M,ver);if(!f)return{ok:false,why:'formato illeggibile'};
+  const F=isFuncMap(ver),order=zigzag(ver),[k,ec]=CAP[ver][f.l];let bits='';
+  for(const[r,c]of order){bits+=String(MASKF[f.m](r,c)?M[r][c]^1:M[r][c]);}
+  const cw=[];for(let i=0;i<(k+ec)*8;i+=8)cw.push(parseInt(bits.slice(i,i+8),2));
+  const rs=rsCorrect(cw,ec);if(!rs.ok)return{ok:false,why:'troppi byte sbagliati',f,cw};
+  const txt=parseData(rs.msg.slice(0,k),ver);return{ok:txt!==null,text:txt,f,cw,fixedPos:rs.pos,why:txt===null?'dati non validi':''};}
+
+
+const STEPS=[{id:'ana',t:'Analisi'},{id:'cod',t:'Codifica',v:1},{id:'com',t:'Completamento',v:1},{id:'cor',t:'Correzione',v:1},{id:'fix',t:'Pattern fissi'},{id:'zig',t:'Zig-zag'},{id:'mas',t:'Maschera',v:1},{id:'fmt',t:'Formato',v:1},{id:'fin',t:'QR finito'},{id:'dan',t:'Danneggia',lab:1}];
+const NV=STEPS.filter(s=>s.v).length;
+let S={op:{},text:'HELLO WORLD',level:'Q',step:3,mask:null,ver:{},layers:6,zig:null,dmg:null,paint:null,sol:false};
+let E=null,timer=null;
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cur=()=>STEPS[S.step].id;
+const msel=()=>S.mask===null?E.best:S.mask;
+function recompute(keep){
+  const e=encode(S.text,S.level);
+  if(e.err){$('encerr').hidden=false;$('encerr').textContent=e.err;return false;}
+  $('encerr').hidden=true;E=e;
+  if(!keep){S.mask=null;S.ver={};S.dmg=null;S.paint=null;S.zig=null;}
+  if(S.zig===null||S.zig>E.order.length)S.zig=E.order.length;
+  return true;
+}
+// ---------- griglia ----------
+function gridSVG(n,fn,q,cls){
+  let r='';
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const c=fn(i,j);if(!c)continue;
+    r+=`<rect x="${j}" y="${i}" width="1" height="1" fill="${c.f}"${c.s?` stroke="${c.s}" stroke-width="${c.w||.06}"`:''}/>`;
+    if(c.dot)r+=`<rect x="${j+.36}" y="${i+.36}" width=".28" height=".28" fill="${c.dot}"/>`;}
+  return `<svg class="${cls||''}" viewBox="${-q} ${-q} ${n+2*q} ${n+2*q}" shape-rendering="crispEdges" role="img" aria-label="Griglia del QR ${n} per ${n}"><rect x="${-q}" y="${-q}" width="${n+2*q}" height="${n+2*q}" fill="#fff"/>${r}</svg>`;
+}
+const EMPTY={f:'#fff',s:'#d3d6dd'};
+const BW=v=>({f:v?'#111':'#fff'});
+function layerMap(upto){const n=E.n,M=emptyM(n,null);functionLayers(E.ver).slice(0,upto).forEach(l=>l.cells.forEach(([r,c,v])=>M[r][c]=v));return M;}
+function renderGrid(){
+  const id=cur(),n=E.n;let fn,q=1,cap='',leg=[],cls='';
+  if(['ana','cod','com','cor'].includes(id)){fn=()=>EMPTY;cap=`Griglia vuota di ${n}×${n} moduli (versione ${E.ver}). Si riempie dal passo 5.`;}
+  else if(id==='fix'){const L=layerMap(S.layers);fn=(i,j)=>L[i][j]===null?EMPTY:L[i][j]===2?{f:'var(--fmtl)',s:'#c9b6f2'}:BW(L[i][j]);cap='Pattern fissi: uguali in ogni QR della stessa versione.';leg=[['#111','modulo scuro'],['var(--fmtl)','riservato al formato']];}
+  else if(id==='zig'){const L=layerMap(6),bits=E.code.map(b=>b.toString(2).padStart(8,'0')).join('');const pos=new Map();E.order.slice(0,S.zig).forEach(([r,c],i)=>pos.set(r*n+c,i));
+    fn=(i,j)=>{const k=pos.get(i*n+j);if(k!==undefined){const b=k<bits.length?+bits[k]:0,byte=Math.floor(k/8);const last=k===S.zig-1;
+      const f=k>=bits.length?'#b9bcc4':byte<E.k?(b?'var(--data)':'var(--datal)'):(b?'var(--ec)':'var(--ecl)');return last?{f,s:'#ffd21f',w:.2}:{f};}
+      return L[i][j]===null?EMPTY:L[i][j]===2?{f:'var(--fmtl)'}:BW(L[i][j]);};
+    cap=`${S.zig} bit posati su ${E.order.length}.`;leg=[['var(--data)','dato: 1'],['var(--datal)','dato: 0'],['var(--ec)','correzione: 1'],['var(--ecl)','correzione: 0'],['#b9bcc4','bit di resto']];}
+  else if(id==='mas'){const m=msel(),M=E.masks[m].M,fp=fmtSet();fn=(i,j)=>fp.has(i*n+j)?{f:'var(--fmtl)'}:{...BW(M[i][j]),dot:!E.F[i][j]&&MASKF[m](i,j)?'#ffd21f':null};cap=`Maschera ${m}: i puntini gialli sono i moduli invertiti.`;leg=[['#ffd21f','modulo invertito'],['var(--fmtl)','formato, ancora da scrivere']];}
+  else if(id==='fmt'){const M=E.masks[msel()].M,fp=fmtSet();fn=(i,j)=>fp.has(i*n+j)?{f:M[i][j]?'var(--fmt)':'var(--fmtl)'}:BW(M[i][j]);cap='I 15 bit del formato, scritti due volte.';leg=[['var(--fmt)','formato: 1'],['var(--fmtl)','formato: 0']];}
+  else if(id==='fin'){const M=E.masks[msel()].M;fn=(i,j)=>BW(M[i][j]);q=4;cap='Inquadralo con la fotocamera del telefono.';}
+  else if(id==='dan'){const M=E.masks[msel()].M,D=dmg();fn=(i,j)=>D[i][j]!==M[i][j]?{f:D[i][j]?'#9b1111':'#ffb3b3'}:BW(D[i][j]);q=4;cls='draw';cap='Clicca o trascina sui moduli per invertirli.';leg=[['#9b1111','reso scuro'],['#ffb3b3','reso chiaro']];}
+  $('grid').innerHTML=gridSVG(n,fn,q,cls);$('gcap').textContent=cap;
+  $('legend').innerHTML=leg.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
+}
+function fmtSet(){const s=new Set();const n=E.n;formatPositions(E.ver).forEach(([r,c])=>s.add(r*n+c));return s;}
+function dmg(){if(!S.dmg)S.dmg=E.masks[msel()].M.map(r=>r.slice());return S.dmg;}
+function paint(){if(!S.paint)S.paint=emptyM(E.n,0);return S.paint;}
+// ---------- barra ----------
+function renderBar(){
+  $('pills').innerHTML=STEPS.map((s,i)=>`<button class="pill${i===S.step?' cur':''}${S.ver[s.id]?' ver':''}${s.lab?' lab':''}" data-go="${i}" aria-current="${i===S.step?'step':'false'}"><span class="num">${S.ver[s.id]?'✓':s.lab?'+':i+1}</span>${s.t}</button>`).join('');
+  const nv=Object.keys(S.ver).filter(k=>S.ver[k]).length,main=Math.min(S.step+1,9);
+  $('sum').innerHTML=`<span><b>${esc(E.text)}</b></span><span>modalità ${MODES[E.mode].name}</span><span>versione ${E.ver} (${E.n}×${E.n})</span><span>livello ${E.level}</span><span>${E.k} byte di dati + ${E.ec} di correzione</span><span>maschera ${msel()}</span><span>${STEPS[S.step].lab?'Laboratorio':`Passo ${main} di 9`}</span>`;
+  const cp=$('pills').querySelector('.cur');if(cp)cp.scrollIntoView({block:'nearest',inline:'center'});
+  $('prog').style.width=(STEPS[S.step].lab?100:main/9*100)+'%';
+  $('lev').innerHTML='LMQH'.split('').map(l=>`<button class="${l===S.level?'on':''}" data-lev="${l}" aria-pressed="${l===S.level}" title="${{L:'7%',M:'15%',Q:'25%',H:'30%'}[l]} di correzione">${l}</button>`).join('');
+}
+// ---------- verifica ----------
+function checkBox(id,q,ph){const v=S.ver[id];return `<div class="check${v?' good':''}" id="ck"><h3>Verifica il tuo calcolo</h3><p>${q}</p><textarea id="ans" placeholder="${ph}" aria-label="La tua risposta"></textarea><div class="row"><button data-act="check">Controlla</button><button data-act="reveal">Mostra la soluzione</button></div><p class="res${v?' good':''}" id="cres">${v?'Verificato.':''}</p></div>`;}
+const bitsOf=s=>s.replace(/[^01]/g,'');
+function cmpBits(a,want){if(a===want)return null;if(!a.length)return'Non hai scritto nessun bit.';
+  for(let i=0;i<Math.min(a.length,want.length);i++)if(a[i]!==want[i])return`Il primo errore è al bit ${i+1}: c'è ${a[i]}, doveva esserci ${want[i]}.`;
+  return a.length<want.length?`I primi ${a.length} bit sono giusti, ma ne mancano ${want.length-a.length}.`:`Ci sono ${a.length-want.length} bit in più alla fine.`;}
+function cmpBytes(s,want){const b=bitsOf(s);let got;
+  if(/^[01\s]+$/.test(s.trim())&&b.length===want.length*8){got=[];for(let i=0;i<b.length;i+=8)got.push(parseInt(b.slice(i,i+8),2));}else got=(s.match(/\d+/g)||[]).map(Number);
+  if(got.join()===want.join())return null;if(!got.length)return'Scrivi i byte in decimale (separati da spazi) o in binario.';
+  for(let i=0;i<Math.min(got.length,want.length);i++)if(got[i]!==want[i])return`Il primo errore è nel byte ${i+1}: hai ${got[i]}, doveva essere ${want[i]}.`;
+  return got.length<want.length?`I primi ${got.length} byte sono giusti, ne mancano ${want.length-got.length}.`:`Ci sono ${got.length-want.length} byte in più.`;}
+function solution(id){const f=E.masks[msel()].fmt;return{cod:E.ind+' '+E.cnt+' '+E.db.map(c=>c.bits).join(' '),com:E.bytes.join(' '),cor:E.rs.rem.join(' '),mas:String(E.best),fmt:f.masked}[id];}
+function doCheck(){const id=cur(),a=$('ans').value;let r;
+  if(id==='cod')r=cmpBits(bitsOf(a),E.ind+E.cnt+E.db.map(c=>c.bits).join(''));
+  else if(id==='com')r=cmpBytes(a,E.bytes);else if(id==='cor')r=cmpBytes(a,E.rs.rem);
+  else if(id==='mas'){const g=(a.match(/\d+/)||[])[0];r=g===String(E.best)?null:g===undefined?'Scrivi il numero della maschera.':`No: la maschera ${g} ha punteggio ${E.masks[+g]?.pen.tot??'—'}, ce n'è una con punteggio più basso.`;}
+  else if(id==='fmt')r=cmpBits(bitsOf(a),E.masks[msel()].fmt.masked);
+  const el=$('cres');if(r===null){S.ver[id]=1;el.className='res good';el.textContent='Giusto, passo verificato.';$('ck').className='check good';renderBar();}else{el.className='res bad';el.textContent=r;$('ck').className='check bad';}
+}
+// ---------- passi ----------
+const calc=(k,html)=>`<details class="calc" data-k="${k}"${S.op[k]?' open':''}><summary><span class="o1">Mostra il calcolo</span><span class="o2">Nascondi il calcolo</span></summary>${html}</details>`;
+const nav=()=>`<div class="nav"><button data-act="prev" ${S.step===0?'disabled':''}>Indietro</button><button data-act="next" ${S.step===STEPS.length-1?'disabled':''}>Avanti</button></div>`;
+function maxChars(v,l,mode){const bits=CAP[v][l][0]*8-4-MODES[mode].cc;if(mode==='num'){const r=bits%10;return Math.floor(bits/10)*3+(r>=7?2:r>=4?1:0);}if(mode==='alnum')return Math.floor(bits/11)*2+(bits%11>=6?1:0);return Math.floor(bits/8);}
+const VIEW={
+ana(){const why={num:'Il messaggio contiene solo cifre: si usa la modalità <b>numerica</b>, che impacchetta 3 cifre in 10 bit.',alnum:'Il messaggio usa solo i 45 caratteri alfanumerici (cifre, lettere maiuscole, spazio e $ % * + - . / :): si usa la modalità <b>alfanumerica</b>, 2 caratteri in 11 bit.',byte:'Il messaggio contiene minuscole o simboli fuori dai 45 alfanumerici: si usa la modalità <b>byte</b> (ISO-8859-1), 8 bit per carattere.'}[E.mode];
+  return `<h2>1. Analisi del messaggio</h2><p>${why}</p><p>Il messaggio ha ${E.text.length} caratteri. Ecco quanti ne entrano, in questa modalità, nelle versioni 1 e 2:</p><div class="scroll"><table><thead><tr><th>Versione</th>${'LMQH'.split('').map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>${[1,2].map(v=>`<tr><td>${v} (${17+4*v}×${17+4*v})</td>${'LMQH'.split('').map(l=>`<td class="n"${v===E.ver&&l===E.level?' style="font-weight:700;background:var(--hi);color:#111"':''}>${maxChars(v,l,E.mode)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <p style="margin-top:12px">Con il livello <b>${E.level}</b> serve la <b>versione ${E.ver}</b>: ${E.k} byte per i dati (${E.k*8} bit) e ${E.ec} byte di correzione, che permettono di correggere fino a ${Math.floor(E.ec/2)} byte sbagliati.</p>${nav()}`;},
+cod(){return `<h2>2. Codifica dei dati</h2><p>Si scrivono, uno dopo l'altro, l'indicatore di modalità (4 bit), il numero di caratteri (${MODES[E.mode].cc} bit) e i dati.</p>
+  <div class="scroll"><table><thead><tr><th>Pezzo</th><th>Calcolo</th><th>Bit</th></tr></thead><tbody><tr><td>modalità</td><td>${MODES[E.mode].name}</td><td class="m">${E.ind}</td></tr><tr><td>conteggio</td><td>${E.text.length} caratteri</td><td class="m">${E.cnt}</td></tr>${E.db.map(c=>`<tr><td class="m">${esc(c.chunk).replace(/ /g,'␣')}</td><td>${c.note}</td><td class="m">${c.bits}</td></tr>`).join('')}</tbody></table></div>
+  <h3>Risultato (${E.ind.length+E.cnt.length+E.db.reduce((s,c)=>s+c.bits.length,0)} bit)</h3><p class="bits"><span class="a">${E.ind}</span> <span class="b">${E.cnt}</span> <span class="c">${E.db.map(c=>c.bits).join(' ')}</span></p>
+  ${nav()}`;},
+com(){const before=E.ind.length+E.cnt.length+E.db.reduce((s,c)=>s+c.bits.length,0);
+  return `<h2>3. Completamento</h2><p>La versione ${E.ver}-${E.level} vuole esattamente <b>${E.k*8} bit</b> di dati; finora ne abbiamo ${before}.</p>
+  <ol><li>Terminatore: ${E.term.length?`aggiungo <span class="m">${E.term}</span> (${E.term.length} zeri)`:'non c\'è spazio, non si aggiunge'}.</li><li>Zeri fino a un multiplo di 8: ${E.zeros.length?`<span class="m">${E.zeros}</span>`:'nessuno'}.</li><li>Byte di riempimento alternati: ${E.pads.length?E.pads.map(p=>`<span class="m">${p}</span>`).join(', '):'nessuno'}.</li></ol>
+  <h3>I ${E.k} byte di dati</h3><div class="scroll"><table><thead><tr><th>#</th><th>Binario</th><th>Decimale</th></tr></thead><tbody>${E.bytes.map((b,i)=>`<tr><td class="n">${i+1}</td><td class="m">${b.toString(2).padStart(8,'0')}</td><td class="n">${b}</td></tr>`).join('')}</tbody></table></div>
+  ${nav()}`;},
+cor(){const g=E.rs.g;
+  const gs=g.map((c,i)=>`α<sup>${LOG[c]}</sup>x<sup>${g.length-1-i}</sup>`).join(' + ');
+  return `<h2>4. Byte di correzione</h2><p>I ${E.k} byte sono i coefficienti del polinomio dei dati, moltiplicato per x<sup>${E.ec}</sup>. Lo si divide per il polinomio generatore, prodotto di (x − α<sup>i</sup>) per i = 0 … ${E.ec-1}, in GF(256) con P = 285. Il resto della divisione dà i byte di correzione.</p>
+  ${calc('cor',`<p class="bits" style="font-family:'IBM Plex Sans'">g(x) = ${gs}</p>
+  <h3>La divisione, passo per passo</h3><p>A ogni passo il primo coefficiente vale α<sup>e</sup>: si moltiplica il generatore per α<sup>e</sup> (sommando e a tutti gli esponenti) e si fa lo XOR. Il primo termine si annulla.</p>
+  <div class="scroll"><table><thead><tr><th>Passo</th><th>Primo coeff.</th><th>α<sup>e</sup></th><th>Dopo lo XOR</th></tr></thead><tbody>${E.rs.steps.map((s,i)=>`<tr><td class="n">${i+1}</td><td class="n">${s.lead}</td><td class="n">${s.exp===null?'—':'α<sup>'+s.exp+'</sup>'}</td><td class="m">${s.res.join(' ')}</td></tr>`).join('')}</tbody></table></div>`)}
+  <h3>I ${E.ec} byte di correzione</h3><p class="bits"><span class="b">${E.rs.rem.join(' ')}</span></p>
+  ${nav()}`;},
+fix(){const L=functionLayers(E.ver);const txt={fin:'tre quadrati 7×7 negli angoli, tranne in basso a destra',sep:'una cornice bianca larga 1 attorno a ogni pattern di ricerca',tim:'righe alternate nere e bianche in riga 6 e colonna 6',ali:E.ver===1?'non c\'è nella versione 1':'un quadrato 5×5 centrato in riga 18, colonna 18 (contando da 0)',dark:`sempre nero, in riga ${4*E.ver+9}, colonna 8`,fmt:'31 moduli tenuti liberi per i 15 bit del formato, scritti due volte (uno è il modulo scuro)'};
+  return `<h2>5. Pattern fissi</h2><p>Prima dei dati si disegnano le parti che servono al lettore per orientarsi. Muovi il cursore per aggiungerle una alla volta.</p>
+  <div class="ctrl"><label for="lay" style="font-weight:600">Livelli: ${S.layers} di 6</label><input type="range" id="lay" min="0" max="6" value="${S.layers}"></div>
+  <ul class="layers">${L.map((l,i)=>`<li class="${i<S.layers?'':'off'}"><b>${i+1}.</b><span><b>${l.name}</b>: ${txt[l.id]}</span></li>`).join('')}</ul>${nav()}`;},
+zig(){const tot=(E.k+E.ec)*8,i=S.zig-1;let info='Nessun bit ancora posato.';
+  if(i>=0){if(i>=tot)info=`Bit di resto ${i-tot+1} di ${E.order.length-tot}: nella versione 2 avanzano 7 moduli, che restano a 0.`;else{const b=Math.floor(i/8);info=`Bit ${i%8+1} del byte ${b+1}, ${b<E.k?'un byte di dati':'un byte di correzione'} (valore ${E.code[b]}). Modulo in riga ${E.order[i][0]}, colonna ${E.order[i][1]}.`;}}
+  return `<h2>6. Zig-zag</h2><p>I ${tot} bit (${E.k} byte di dati, poi ${E.ec} di correzione) entrano a partire dall'angolo in basso a destra, in colonne larghe 2 moduli: su verso l'alto, poi giù, poi su. La colonna 6 del timing pattern si salta, e i moduli già occupati si scavalcano.</p>
+  <div class="ctrl"><button data-act="play">${timer?'Pausa':'Avvia'}</button><button data-act="z0">Dall'inizio</button><button data-act="zm">−8</button><button data-act="zp">+8</button></div>
+  <div class="ctrl"><label for="zz" style="font-weight:600">Bit posati: ${S.zig}</label><input type="range" id="zz" min="0" max="${E.order.length}" value="${S.zig}"></div><p>${info}</p>${nav()}`;},
+mas(){const m=msel(),book=E.text==='HELLO WORLD'&&E.level==='Q';
+  return `<h2>7. Maschera</h2><p>Si inverte una parte dei moduli dei dati, secondo uno di 8 schemi, per evitare zone che confondono il lettore. Per ogni maschera si calcolano 4 penalità e vince quella con il totale più basso.</p>
+  <p class="small" style="color:var(--soft)">1: file di 5 o più moduli uguali · 2: quadrati 2×2 uguali · 3: sequenze simili ai pattern di ricerca · 4: squilibrio tra moduli neri e bianchi.</p>
+  <div class="masks">${E.masks.map((x,i)=>`<button class="mk${i===m?' sel':''}" data-mask="${i}" aria-pressed="${i===m}">${gridSVG(E.n,(r,c)=>BW(x.M[r][c]),1)}<span class="t">Maschera ${i}${i===E.best?'<span class="tag">algoritmo</span>':''}${book&&i===2?'<span class="tag book">libro</span>':''}</span><span>${x.pen.p1} + ${x.pen.p2} + ${x.pen.p3} + ${x.pen.p4} = <b>${x.pen.tot}</b></span></button>`).join('')}</div>
+  <p style="margin-top:12px">Maschera selezionata: <b>${m}</b> (${m.toString(2).padStart(3,'0')}), inverte i moduli dove ${MASKTXT[m]}.${book?' Il libro usa la 2 perché è comoda da fare a mano; l\'algoritmo sceglierebbe la '+E.best+'.':''} Clicca un'altra maschera per usarla nel resto della costruzione.</p>
+  ${nav()}`;},
+fmt(){const m=msel(),f=E.masks[m].fmt;
+  return `<h2>8. Formato</h2><p>Il formato dice al lettore livello e maschera: 2 bit per il livello (L 01, M 00, Q 11, H 10) e 3 per la maschera, protetti da 10 bit di un codice BCH binario, poi mascherati con 101010000010010.</p>
+  <p class="bits"><span class="a">${LEVBITS[E.level]}</span> <span class="c">${m.toString(2).padStart(3,'0')}</span> → <span class="m">${f.data}</span></p>
+  ${calc('fmt',`<h3>Divisione per 10100110111</h3><div class="scroll"><table><tbody>${f.steps.map(s=>`<tr><td class="m">${s.before}</td></tr><tr><td class="m" style="color:var(--soft)">${s.g}</td></tr>`).join('')}<tr><td class="m"><b>${'0'.repeat(5)+f.rem}</b></td></tr></tbody></table></div>
+  <p>Resto: <span class="m">${f.rem}</span>. Stringa: <span class="m">${f.data} ${f.rem}</span>.</p><p>XOR con <span class="m">101010000010010</span> → <b class="m">${f.masked}</b></p>`)}
+  <h3>I 15 bit del formato</h3><p class="bits"><span class="a">${f.masked}</span></p>${nav()}`;},
+fin(){return `<h2>9. QR finito</h2><p class="big">${esc(E.text)}</p><p>Versione ${E.ver}, livello ${E.level}, maschera ${msel()}. Prova a leggerlo con la fotocamera del telefono: il bordo bianco attorno (4 moduli) serve al lettore.</p><p>Ora puoi metterlo alla prova: danneggialo e prova a leggerlo con il telefono.</p><div class="ctrl"><button data-go="9">Danneggialo</button></div>${nav()}`;},
+dan(){const D=dmg(),M=E.masks[msel()].M,n=E.n;let flips=0;D.forEach((r,i)=>r.forEach((v,j)=>{if(v!==M[i][j])flips++;}));
+  const pct=(flips*100/(n*n)).toLocaleString('it-IT',{maximumFractionDigits:1});
+  return `<h2>Danneggia il QR</h2><p>Inverti dei moduli cliccando o trascinando sulla griglia, poi prova a leggere il codice con la fotocamera del telefono.</p>
+  <div class="ctrl"><button data-act="rand">Inverti 3 moduli a caso</button><button data-act="fix">Ripristina</button></div>
+  <p class="big">${pct}% di moduli danneggiati</p>${nav()}`;}
+};
+function renderStep(){$('step').innerHTML=VIEW[cur()]();}
+function render(){renderBar();renderStep();renderGrid();}
+function go(i){if(timer){clearInterval(timer);timer=null;}S.step=Math.max(0,Math.min(STEPS.length-1,i));render();}
+// ---------- eventi ----------
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.go!==undefined){go(+b.dataset.go);if(b.closest('.pills')===null)window.scrollTo({top:0});return;}
+  if(b.dataset.lev){S.level=b.dataset.lev;if(recompute())render();else renderBar();return;}
+  if(b.dataset.mask!==undefined){S.mask=+b.dataset.mask;S.dmg=null;renderBar();renderStep();renderGrid();return;}
+  if(b.id==='book'){S.text='HELLO WORLD';S.level='Q';$('txt').value=S.text;recompute();S.mask=2;render();return;}
+  const a=b.dataset.act;if(!a)return;
+  if(a==='next')go(S.step+1);if(a==='prev')go(S.step-1);
+  if(a==='check')doCheck();
+  if(a==='reveal'){$('ans').value=solution(cur());}
+  if(a==='play'){if(timer){clearInterval(timer);timer=null;}else{if(S.zig>=E.order.length)S.zig=0;timer=setInterval(()=>{S.zig++;if(S.zig>=E.order.length){S.zig=E.order.length;clearInterval(timer);timer=null;}renderStep();renderGrid();},matchMedia('(prefers-reduced-motion: reduce)').matches?20:60);}renderStep();}
+  if(a==='z0'){S.zig=0;renderStep();renderGrid();}
+  if(a==='zm'){S.zig=Math.max(0,S.zig-8);renderStep();renderGrid();}
+  if(a==='zp'){S.zig=Math.min(E.order.length,S.zig+8);renderStep();renderGrid();}
+  if(a==='rand'){const D=dmg(),n=E.n;let k=0;while(k<3){const r=Math.floor(Math.random()*n),c=Math.floor(Math.random()*n);if(E.F[r][c])continue;D[r][c]^=1;k++;}renderStep();renderGrid();}
+  if(a==='fix'){S.dmg=null;renderStep();renderGrid();}
+  if(a==='pfix'){const P=paint();functionLayers(E.ver).forEach(l=>l.cells.forEach(([r,c,v])=>{P[r][c]=v===1?1:0;}));renderStep();renderGrid();}
+  if(a==='pclr'){S.paint=null;renderStep();renderGrid();}
+  if(a==='sol'){S.sol=!S.sol;renderStep();renderGrid();}
+});
+document.addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k)S.op[k]=e.target.open;},true);
+document.addEventListener('input',e=>{
+  if(e.target.id==='txt'){S.text=e.target.value;if(recompute()){render();}else renderBar();}
+  if(e.target.id==='lay'){S.layers=+e.target.value;renderStep();renderGrid();$('lay').focus();}
+  if(e.target.id==='zz'){S.zig=+e.target.value;renderStep();renderGrid();$('zz').focus();}
+});
+let drag=null;
+function cellAt(ev){const svg=$('grid').querySelector('svg');const vb=svg.viewBox.baseVal,rc=svg.getBoundingClientRect();const x=vb.x+(ev.clientX-rc.left)/rc.width*vb.width,y=vb.y+(ev.clientY-rc.top)/rc.height*vb.height;const c=Math.floor(x),r=Math.floor(y);return r>=0&&c>=0&&r<E.n&&c<E.n?[r,c]:null;}
+function applyAt(rc){const id=cur(),T=id==='dan'?dmg():paint();const[r,c]=rc;if(drag.val===null)drag.val=T[r][c]^1;if(T[r][c]!==drag.val){T[r][c]=drag.val;renderGrid();}}
+$('grid').addEventListener('pointerdown',ev=>{if(!['dan','col'].includes(cur()))return;const rc=cellAt(ev);if(!rc)return;ev.preventDefault();drag={val:null,last:rc.join()};applyAt(rc);});
+window.addEventListener('pointermove',ev=>{if(!drag)return;const rc=cellAt(ev);if(rc&&rc.join()!==drag.last){drag.last=rc.join();applyAt(rc);}});
+window.addEventListener('pointerup',()=>{if(drag){drag=null;renderStep();}});
+function start(d){if(d&&d.S)S=Object.assign(S,d.S);S.op=S.op||{};S.ver={};S.step=Math.min(S.step,STEPS.length-1);$('txt').value=S.text;if(!recompute(true)){S.text='HELLO WORLD';$('txt').value=S.text;recompute();}render();window.claude?.hot?.snapshot?.(()=>({S}));}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+
+}
+</script>
+</body>
+</html>
